@@ -1,0 +1,19 @@
+{
+  "paging": {
+    "page": 1,
+    "count": 1,
+    "maxPage": 1,
+    "itemsTotal": 1
+  },
+  "packages": [
+    {
+      "id": "app.folderplex",
+      "title": "FolderPlex",
+      "iconUri": "https://USER.github.io/fp/icon160.png",
+      "manifestUrl": "https://USER.github.io/fp/app.folderplex.manifest.json",
+      "category": "multimedia",
+      "pool": "main",
+      "description": "Клиент Plex для LG webOS 4+: библиотеки как на сервере (с распознаванием Plex или по папкам), случайное воспроизведение папок и сериалов, автозапуск следующего видео с паузой, сортировка."
+    }
+  ]
+}

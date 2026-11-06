@@ -13,7 +13,7 @@
       "manifestUrl": "https://i1yanov.github.io/fp/app.folderplex.manifest.json",
       "category": "multimedia",
       "pool": "main",
-      "description": "Клиент Plex для LG webOS 4+: библиотеки как на сервере (с распознаванием Plex или по папкам), случайное воспроизведение папок и сериалов, автозапуск следующего видео с паузой, сортировка."
+      "description": "FolderPlex is a fast, lightweight Plex client built for LG webOS 4+ TVs. Instant navigation: cached libraries open immediately, posters are resized by the server, and remote control movement is tuned for older TV hardware. Improved remote navigation: a clearly highlighted focus, long-press OK (or the blue button) for quick actions, and focus that returns to where you left off. Browse your libraries with Plex metadata (including your manual match fixes) or switch to the real folder structure from the server. Sort by title, date added, release date or recently watched, remembered per library. Play in order or shuffle any folder, library or TV show across all seasons, with auto-play of the next video and an adjustable countdown. Direct play with hardware decoding (MKV, MP4, HEVC, AC3), automatic fallback to server transcoding, resume and watch-state sync with Plex. Unofficial app, not affiliated with Plex Inc."
     }
   ]
 }

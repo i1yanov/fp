@@ -1,15 +1,15 @@
 {
   "id": "app.folderplex",
-  "version": "1.14.0",
+  "version": "1.15.0",
   "type": "web",
   "title": "FolderPlex",
-  "appDescription": "Клиент Plex: библиотеки по папкам, случайное воспроизведение, автозапуск следующего",
+  "appDescription": "Fast, lightweight Plex client for LG TVs with remote-friendly navigation: browse libraries by Plex metadata or real server folders, shuffle any folder or show, auto-play next with a countdown.",
   "iconUri": "https://i1yanov.github.io/fp/icon160.png",
   "sourceUrl": "https://i1yanov.github.io/fp/",
   "rootRequired": false,
-  "ipkUrl": "https://i1yanov.github.io/fp/app.folderplex_1.14.0_all.ipk",
-  "ipkSize": 45350,
+  "ipkUrl": "https://i1yanov.github.io/fp/app.folderplex_1.15.0_all.ipk",
+  "ipkSize": 49370,
   "ipkHash": {
-    "sha256": "e110d5df715932ebeff3c19bf899ae86cce05a593ae3fb6f21d2e6162abc4ffe"
+    "sha256": "c9853397909d30bbf1861d89dc85d53f7a6e589170039de64b1b1926788b9fcc"
   }
 }

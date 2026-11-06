@@ -4,12 +4,12 @@
   "type": "web",
   "title": "FolderPlex",
   "appDescription": "Клиент Plex: библиотеки по папкам, случайное воспроизведение, автозапуск следующего",
-  "iconUri": "https://USER.github.io/fp/icon160.png",
-  "sourceUrl": "https://USER.github.io/fp/",
+  "iconUri": "https://i1yanov.github.io/fp/icon160.png",
+  "sourceUrl": "https://i1yanov.github.io/fp/",
   "rootRequired": false,
-  "ipkUrl": "https://USER.github.io/fp/app.folderplex_1.13.0_all.ipk",
-  "ipkSize": 45222,
+  "ipkUrl": "https://i1yanov.github.io/fp/app.folderplex_1.13.0_all.ipk",
+  "ipkSize": 45218,
   "ipkHash": {
-    "sha256": "2be2daef0e0b1e200dff1a53543b6ec5994fcfda0b92ba54f6171d7ef17e64ab"
+    "sha256": "d298fc71393f9d09249e323105f7959817cea0eb24888fbcb7f1bc080579b448"
   }
 }

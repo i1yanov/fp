@@ -1,4 +1,6 @@
 # fp
 folderPlex 4 webos
 
-Fast, lightweight Plex client for LG TVs with remote-friendly navigation: browse libraries by Plex metadata or real server folders, shuffle any folder or show, auto-play next with a countdown.
+install through Homebrew.
+1. add repo https://i1yanov.github.io/fp/a.json
+2. install new app "FolderPlex"

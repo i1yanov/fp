@@ -34,7 +34,7 @@ import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-VERSION = "1.1"
+VERSION = "1.2"
 # Наборы заголовков. Первый — как у Android-приложения (с ним архив точно работает),
 # второй — как у обычного браузера, на случай если Cloudflare перед архивом отвергнет первый (403).
 HEADER_SETS = [
@@ -231,6 +231,25 @@ class Busy(Exception):
     pass
 
 
+class Denied(Exception):
+    """Архив отказал в доступе (401/403): вероятно, адрес временно заблокирован. Долгая пауза, без частых повторов."""
+    def __init__(self, code):
+        Exception.__init__(self, "HTTP %d" % code)
+        self.code = code
+
+
+DENIED_PAUSE = 30 * 60
+DENIED_UNTIL = [0.0]          # общая пауза для всех разделов: бан — на весь адрес
+
+
+def denied_left():
+    return max(0, int(DENIED_UNTIL[0] - time.time()))
+
+
+def denied_message():
+    return "Архив отказал в доступе — похоже, адрес временно заблокирован. Следующая попытка через %d мин" % max(1, (denied_left() + 59) // 60)
+
+
 def _quote_url(url):
     """Кириллица и пробелы в пути → %XX (уже закодированное не трогаем)."""
     u = urllib.parse.urlsplit(url)
@@ -253,6 +272,8 @@ def _request(url, start, timeout, idx):
 
 
 def open_remote(url, start=0, timeout=25):
+    if denied_left():
+        raise Denied(401)
     idx = HEADER_IDX[0]
     try:
         try:
@@ -268,6 +289,9 @@ def open_remote(url, start=0, timeout=25):
         log("архив: %s на %s" % (describe_http_error(e), url))
         if e.code in (503, 429):
             raise Busy()
+        if e.code in (401, 403):
+            DENIED_UNTIL[0] = time.time() + DENIED_PAUSE
+            raise Denied(e.code)
         if e.code == 416:
             return None, start, start
         raise
@@ -463,6 +487,9 @@ class StreamSource:
                 self._download(start)
                 backoff = 0
                 self.message = None
+            except Denied:
+                sleep = max(60, denied_left())
+                self.message = denied_message()
             except Busy:
                 backoff = min(60, backoff * 2 if backoff else 5)
                 sleep = backoff
@@ -730,6 +757,9 @@ class Downloads:
             try:
                 self._download(t, target, owner)
                 backoff = 0
+            except Denied:
+                sleep = max(60, denied_left())
+                t["state"], t["message"] = "waiting", denied_message()
             except Busy:
                 backoff = min(120, backoff * 2 if backoff else 10)
                 sleep = backoff
@@ -747,8 +777,9 @@ class Downloads:
                 owner.resp = None
                 GATE.release(lane, owner)
                 self.save()
-            if sleep:
-                time.sleep(sleep)
+            t_end = time.time() + sleep
+            while sleep and time.time() < t_end and t["state"] != "cancelled":
+                time.sleep(0.5)
 
     def _download(self, t, target, owner):
         part = target + ".part"

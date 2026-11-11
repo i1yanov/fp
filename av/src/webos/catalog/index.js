@@ -1,0 +1,1 @@
+var CATALOG_INDEX=[{"id": "multiki", "title": "Мультфильмы", "count": 3606, "kind": "video"}, {"id": "audio", "title": "Аудио-сказки", "count": 409, "kind": "audio"}, {"id": "film", "title": "Фильмы", "count": 4998, "kind": "video"}, {"id": "filmiki", "title": "Фильмики", "count": 1291, "kind": "video"}, {"id": "radioteatr", "title": "РадиоТеатр", "count": 294, "kind": "audio"}];

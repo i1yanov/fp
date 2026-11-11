@@ -29,12 +29,20 @@ import socket
 import sys
 import threading
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-VERSION = "1.0"
-USER_AGENT = "Mozilla/5.0 (X11; Linux) ArhivVeshchaniya-Server/" + VERSION
+VERSION = "1.1"
+# Наборы заголовков. Первый — как у Android-приложения (с ним архив точно работает),
+# второй — как у обычного браузера, на случай если Cloudflare перед архивом отвергнет первый (403).
+HEADER_SETS = [
+    {"User-Agent": "Mozilla/5.0 (Linux; Android) MultikiFamily/0.3", "Accept": "*/*"},
+    {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+     "Accept": "*/*", "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8"},
+]
+HEADER_IDX = [0]
 DEVICE_NAME = "Домашний сервер"
 HISTORY_DIR = ".история"
 CACHE_DIR = ".кэш"
@@ -223,17 +231,48 @@ class Busy(Exception):
     pass
 
 
-def open_remote(url, start=0, timeout=25):
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+def _quote_url(url):
+    """Кириллица и пробелы в пути → %XX (уже закодированное не трогаем)."""
+    u = urllib.parse.urlsplit(url)
+    return urllib.parse.urlunsplit((u.scheme, u.netloc, urllib.parse.quote(u.path, safe="/%:@!$&'()*+,;=~-._"), u.query, ""))
+
+
+def describe_http_error(e):
+    if isinstance(e, urllib.error.HTTPError):
+        return "HTTP %d" % e.code
+    if isinstance(e, urllib.error.URLError):
+        return "сеть: %s" % (e.reason,)
+    return e.__class__.__name__
+
+
+def _request(url, start, timeout, idx):
+    req = urllib.request.Request(_quote_url(url), headers=dict(HEADER_SETS[idx]))
     if start > 0:
         req.add_header("Range", "bytes=%d-" % start)
+    return urllib.request.urlopen(req, timeout=timeout)
+
+
+def open_remote(url, start=0, timeout=25):
+    idx = HEADER_IDX[0]
     try:
-        resp = urllib.request.urlopen(req, timeout=timeout)
+        try:
+            resp = _request(url, start, timeout, idx)
+        except urllib.error.HTTPError as e:
+            if e.code != 403:
+                raise
+            alt = (idx + 1) % len(HEADER_SETS)
+            log("архив ответил 403 на %s — пробую другие заголовки" % url)
+            resp = _request(url, start, timeout, alt)
+            HEADER_IDX[0] = alt
     except urllib.error.HTTPError as e:
+        log("архив: %s на %s" % (describe_http_error(e), url))
         if e.code in (503, 429):
             raise Busy()
         if e.code == 416:
             return None, start, start
+        raise
+    except Exception as e:
+        log("архив: %s на %s" % (describe_http_error(e), url))
         raise
     total = None
     pos = 0
@@ -432,7 +471,7 @@ class StreamSource:
                 if not (self.closed or self.preempted or self.wanted >= 0):
                     backoff = min(30, backoff * 2 if backoff else 3)
                     sleep = backoff
-                    self.message = "Нет связи с архивом (%s). Повтор через %d с" % (e.__class__.__name__, backoff)
+                    self.message = "Нет связи с архивом (%s). Повтор через %d с" % (describe_http_error(e), backoff)
             finally:
                 self.resp = None
                 self.up = -1
@@ -703,7 +742,7 @@ class Downloads:
                 else:
                     backoff = min(120, backoff * 2 if backoff else 5)
                     sleep = backoff
-                    t["state"], t["message"] = "waiting", "Нет связи с архивом (%s). Повтор через %d с" % (e.__class__.__name__, backoff)
+                    t["state"], t["message"] = "waiting", "Нет связи с архивом (%s). Повтор через %d с" % (describe_http_error(e), backoff)
             finally:
                 owner.resp = None
                 GATE.release(lane, owner)
@@ -909,8 +948,54 @@ class Handler(BaseHTTPRequestHandler):
             pos += len(data)
 
 
+TEST_URLS = [
+    "http://multiki.arjlover.net/multiki/13.reis.avi",
+    "http://audio.arjlover.net/audio/Baba_yaga/chitaet_Larisa_Luzhina_-_Baba_Yaga.mp3",
+]
+
+
+def self_test(urls):
+    """python3 arhiv-server.py --test : проверка, отвечает ли архив этому серверу."""
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, *a, **k):
+            return None
+    opener = urllib.request.build_opener(NoRedirect)
+    ok_all = True
+    for url in urls:
+        print("\n=== " + url)
+        for i, hs in enumerate(HEADER_SETS):
+            cur, hops, result = url, 0, None
+            while hops < 5:
+                req = urllib.request.Request(_quote_url(cur), headers=dict(hs))
+                req.add_header("Range", "bytes=0-1023")
+                try:
+                    r = opener.open(req, timeout=20)
+                    result = "HTTP %d, получено %d байт" % (r.status, len(r.read(1024)))
+                    break
+                except urllib.error.HTTPError as e:
+                    if e.code in (301, 302, 303, 307, 308) and e.headers.get("Location"):
+                        cur = urllib.parse.urljoin(cur, e.headers["Location"])
+                        print("   заголовки %d: %d → %s" % (i + 1, e.code, cur))
+                        hops += 1
+                        continue
+                    srv = e.headers.get("Server", "")
+                    result = "HTTP %d%s" % (e.code, (" (сервер: %s)" % srv) if srv else "")
+                    break
+                except Exception as e:
+                    result = "ошибка: %s" % describe_http_error(e)
+                    break
+            good = result.startswith("HTTP 20")
+            ok_all = ok_all and (good or i > 0)
+            print("   заголовки %d: %s %s" % (i + 1, result, "✓" if good else "✗"))
+    print()
+    return 0
+
+
 def main():
     global ROOT, CACHE_LIMIT
+    if "--test" in sys.argv:
+        extra = [a for a in sys.argv[1:] if a.startswith("http")]
+        sys.exit(self_test(extra or TEST_URLS))
     ap = argparse.ArgumentParser(description="Архив Вещания — домашний помощник для телевизоров LG")
     ap.add_argument("--root", required=True, help="папка «Архив Вещания» на диске сервера (та же, что в Samba)")
     ap.add_argument("--port", type=int, default=8765)

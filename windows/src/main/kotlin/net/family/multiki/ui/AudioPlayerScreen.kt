@@ -147,7 +147,7 @@ fun AudioPlayerScreen(vm: MainViewModel) {
                     if (st.isBuffering && !st.isPlaying) FilmLeaderLoader(caption = null, size = 56.dp)
                     StreamStatusLine(status)
                     st.error?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = Palette.Red) }
-                    SmallCaption("Звук продолжит играть при выключенном экране")
+                    SmallCaption("Звук продолжит играть, пока вы смотрите другие разделы")
 
                     if (item != null && item.parts.size > 1) {
                         Gap(16.dp)

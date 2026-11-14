@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Архив Вещания для Windows — установка</title>
+<style>
+  body { margin: 0; background: #F2E4C6; color: #2A1E17; font: 18px/1.55 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  header { background: #9E2B25; color: #F3E6C8; padding: 28px 24px; border-top: 14px dashed #2A1E17; }
+  header h1 { margin: 0; font-size: 40px; letter-spacing: 1px; text-transform: uppercase; }
+  header div { opacity: .85; }
+  main { max-width: 820px; margin: 0 auto; padding: 28px 24px 60px; }
+  h2 { color: #9E2B25; margin: 40px 0 8px; font-size: 28px; }
+  code { background: #E8D6AE; padding: 1px 6px; border-radius: 4px; font: 15px ui-monospace, Menlo, Consolas, monospace; }
+  .dl { display: inline-block; background: #9E2B25; color: #F3E6C8; padding: 14px 22px; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 20px; }
+  .note { background: #fff8e6; border-left: 6px solid #D9A441; padding: 10px 16px; margin: 14px 0; }
+  ol li, ul li { margin-bottom: 8px; }
+  a { color: #9E2B25; }
+  table { border-collapse: collapse; width: 100%; font-size: 16px; }
+  td, th { border: 1px solid #C9B38A; padding: 6px 10px; text-align: left; vertical-align: top; }
+  .muted { color: #6B5847; font-size: 15px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Архив Вещания</h1>
+  <div>для Windows 10 и 11 (64-бит) · версия 1.0.0</div>
+</header>
+<main>
+
+<p>Мультфильмы, фильмы, аудиосказки и радиоспектакли с <a href="https://multiki.arjlover.net/">multiki.arjlover.net</a> на компьютере. Всё как в Android-приложении: каталог, просмотр, скачивание, общий домашний сервер, история и места остановки. Плеер VLC уже внутри.</p>
+
+<p><a class="dl" href="https://github.com/i1yanov/fp/releases/download/windows-v1.0.0/ArhivVeshchaniya-1.0.0.msi">Скачать установщик (.msi)</a></p>
+
+<h2>Установка</h2>
+<ol>
+  <li>Запустите скачанный файл <code>ArhivVeshchaniya-1.0.0.msi</code>.</li>
+  <li>Если Windows покажет «Windows защитила ваш компьютер» — нажмите <b>Подробнее</b> → <b>Выполнить в любом случае</b>. Так бывает со всеми программами без платной цифровой подписи.</li>
+  <li>Выберите папку установки (можно оставить как есть) → <b>Install</b>. Права администратора не нужны.</li>
+  <li>Программа появится в меню «Пуск» и на рабочем столе как <b>ArhivVeshchaniya</b>.</li>
+</ol>
+
+<h2>Первая настройка</h2>
+<p>Откройте <b>Настройки</b> на главном экране.</p>
+<ol>
+  <li><b>Папка для скачанного</b> — куда «Скачать» сохраняет фильмы на этом компьютере. По умолчанию <code>Видео\Архив Вещания</code>; кнопка «Выбрать папку…» меняет её. Задаётся один раз.</li>
+  <li><b>Домашний сервер</b> (если он есть) — та же папка, что в Android-приложении, например <code>\\192.168.1.50\storage\SrvAV</code>. Вставьте путь или выберите папку → <b>Проверить</b> → <b>Сохранить</b>.</li>
+</ol>
+<div class="note">Если сервер просит логин и пароль: один раз откройте эту папку в Проводнике (вставьте <code>\\192.168.1.50\storage\SrvAV</code> в адресную строку), введите логин и пароль Samba и отметьте <b>«Запомнить учётные данные»</b>. Дальше Windows подключается сама, и программа видит сервер.</div>
+
+<h2>Управление</h2>
+<table>
+  <tr><td>Пробел или Enter</td><td>Пауза / продолжить</td></tr>
+  <tr><td>← →</td><td>Перемотка на 10 секунд</td></tr>
+  <tr><td>F или F11, двойной щелчок</td><td>Во весь экран / обратно</td></tr>
+  <tr><td>Esc</td><td>Выйти из полноэкранного режима, затем из плеера</td></tr>
+  <tr><td>Page Up / Page Down</td><td>Предыдущая / следующая серия</td></tr>
+  <tr><td>Alt + ←</td><td>Назад на любом экране</td></tr>
+</table>
+
+<h2>Важно про архив</h2>
+<p>Архив разрешает <b>одно соединение на раздел с одного домашнего адреса</b> — для всех устройств дома сразу. Программа следит за этим сама на этом компьютере, но не видит, что делают телефоны и телевизоры. Не смотрите онлайн и не качайте один и тот же раздел одновременно с разных устройств — иначе архив может временно заблокировать адрес.</p>
+
+<h2>Удаление</h2>
+<p>Параметры Windows → Приложения → <b>ArhivVeshchaniya</b> → Удалить. Скачанные фильмы в вашей папке и на сервере остаются.</p>
+
+<p class="muted" style="margin-top:40px">Содержимое принадлежит <a href="https://multiki.arjlover.net/">multiki.arjlover.net</a>. Программа — для личного семейного использования.</p>
+</main>
+</body>
+</html>

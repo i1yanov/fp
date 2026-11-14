@@ -35,3 +35,13 @@ install through Homebrew.
 
 - `av/` — помощник (`arhiv-server.py`, `install.sh`), страница инструкции, описание для Homebrew
 - `av/src/webos/` — исходники приложения; `av/src/build_ipk.sh` — сборка ipk
+
+---
+
+# Архив Вещания для Windows
+
+Программа для Windows 10/11 (64-бит), перенос Android-приложения «Архив Вещания»: каталог пяти разделов, онлайн-просмотр (одно соединение на раздел), скачивание в выбранную папку, домашний сервер (сетевая папка Windows), общая история и места остановки. Плеер VLC встроен.
+
+- Установщик: https://github.com/i1yanov/fp/releases/download/windows-v1.0.0/ArhivVeshchaniya-1.0.0.msi
+- Инструкция: https://i1yanov.github.io/fp/windows/
+- Исходники: `windows/` (Kotlin, Compose for Desktop, vlcj). Сборка — GitHub Actions (`.github/workflows/windows.yml`): проверка компиляции, самотест на виртуальном экране, сборка `.msi` с VLC 3.0.21 и публикация в Releases. Версия — `appVersion` в `windows/build.gradle.kts`.

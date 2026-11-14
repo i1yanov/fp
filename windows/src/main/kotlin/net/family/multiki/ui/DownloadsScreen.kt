@@ -157,8 +157,8 @@ fun DownloadsScreen(vm: MainViewModel) {
             // ------------------------------------------------ this device
             item {
                 GroupHeader(
-                    "НА ЭТОМ УСТРОЙСТВЕ",
-                    "Занято ${formatSize(used)} · свободно ${formatSize(free)} · папка Android/data/net.family.multiki/files/Загруженное",
+                    "НА ЭТОМ КОМПЬЮТЕРЕ",
+                    "Занято ${formatSize(used)} · свободно ${formatSize(free)} · папка ${Downloads.root.absolutePath} (меняется в «Настройках»)",
                 )
             }
             if (deviceRows.isEmpty()) {

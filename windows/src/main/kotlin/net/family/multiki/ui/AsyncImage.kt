@@ -40,6 +40,7 @@ object Thumbs {
     fun cached(url: String): ImageBitmap? = synchronized(memory) { memory[url] }
 
     suspend fun load(url: String): ImageBitmap? {
+        if (System.getenv("ARHIV_SMOKE") != null) return null // build-machine self-test: no requests to the site
         cached(url)?.let { return it }
         if (synchronized(failed) { url in failed }) return null
         return withContext(Dispatchers.IO) {

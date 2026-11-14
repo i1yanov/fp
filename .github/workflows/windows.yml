@@ -46,6 +46,9 @@ jobs:
           du -sh $dst
       - name: Build MSI
         run: gradle --no-daemon packageMsi
+      - name: jpackage logs
+        if: failure()
+        run: cat build/compose/logs/packageMsi/*.txt || true
       - name: Collect
         id: out
         run: |

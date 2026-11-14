@@ -94,8 +94,8 @@ jobs:
         run: |
           f=$(ls build/compose/binaries/main/msi/*.msi | head -1)
           ver=$(grep -oP 'val appVersion = "\K[^"]+' build.gradle.kts)
-          cp "$f" "ArhivVeshchaniya-$ver.msi"
-          echo "file=windows/ArhivVeshchaniya-$ver.msi" >> $GITHUB_OUTPUT
+          cp "$f" "ArhivVeshchaniya.msi"   # one name for every version: releases/latest/download/ArhivVeshchaniya.msi
+          echo "file=windows/ArhivVeshchaniya.msi" >> $GITHUB_OUTPUT
           echo "ver=$ver" >> $GITHUB_OUTPUT
       - uses: actions/upload-artifact@v4
         with:
@@ -109,5 +109,5 @@ jobs:
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" "${{ steps.out.outputs.file }}" --clobber
           else
-            gh release create "$tag" "${{ steps.out.outputs.file }}" --title "Архив Вещания для Windows ${{ steps.out.outputs.ver }}" --notes "Установщик для Windows 10/11 (64-бит). VLC уже внутри."
+            gh release create "$tag" "${{ steps.out.outputs.file }}" --title "Архив Вещания для Windows ${{ steps.out.outputs.ver }}" --latest --notes "Установщик для Windows 10/11 (64-бит). VLC уже внутри. Ставится поверх прежней версии."
           fi

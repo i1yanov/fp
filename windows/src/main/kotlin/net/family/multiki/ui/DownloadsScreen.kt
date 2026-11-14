@@ -107,8 +107,8 @@ fun DownloadsScreen(vm: MainViewModel) {
     }
 
     fun askTransfer(r: DRow, toServer: Boolean) {
-        val where = if (toServer) "на домашний сервер" else "на это устройство"
-        val from = if (toServer) "с этого устройства" else "с домашнего сервера"
+        val where = if (toServer) "на домашний сервер" else "на этот компьютер"
+        val from = if (toServer) "с этого компьютера" else "с домашнего сервера"
         ask = Ask(
             title = "Перенести $where?",
             text = "«${r.title}» будет скопирован $from $where по домашней сети, без интернета.\n\n" +
@@ -121,7 +121,7 @@ fun DownloadsScreen(vm: MainViewModel) {
     }
 
     fun askDelete(r: DRow) {
-        val where = if (r.onServer) "с домашнего сервера — для всех устройств" else "с этого устройства"
+        val where = if (r.onServer) "с домашнего сервера — для всех устройств" else "с этого компьютера"
         ask = Ask(
             title = "Удалить?",
             text = "«${r.title}» будет удалён $where.",
@@ -145,7 +145,7 @@ fun DownloadsScreen(vm: MainViewModel) {
         }
         Tabs(
             tab,
-            listOf("На устройстве · ${deviceRows.size}", "На сервере · ${serverRows.size}"),
+            listOf("На компьютере · ${deviceRows.size}", "На сервере · ${serverRows.size}"),
             onSelect = { tab = it },
         )
         LazyColumn(
@@ -219,7 +219,7 @@ fun DownloadsScreen(vm: MainViewModel) {
                         onPlay = { play(r) },
                         onPause = { r.task?.let { Downloads.pause(it.key) } },
                         onResume = { r.task?.let { Downloads.resume(it.key) } },
-                        transferLabel = if (r.lib?.complete == true && onDevice == null) "На устройство" else null,
+                        transferLabel = if (r.lib?.complete == true && onDevice == null) "На компьютер" else null,
                         onTransfer = { askTransfer(r, toServer = false) },
                         onDelete = { askDelete(r) },
                     )
@@ -250,7 +250,7 @@ fun DownloadsScreen(vm: MainViewModel) {
     }
 }
 
-/** Two tabs: «На устройстве» / «На сервере». */
+/** Two tabs: «На компьютере» / «На сервере». */
 @Composable
 private fun Tabs(selected: Int, labels: List<String>, onSelect: (Int) -> Unit) {
     androidx.compose.foundation.layout.Row(

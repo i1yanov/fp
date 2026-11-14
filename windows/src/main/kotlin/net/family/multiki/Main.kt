@@ -115,6 +115,7 @@ fun main() {
             },
         ) {
             window.minimumSize = java.awt.Dimension(900, 600)
+            if (Smoke.dir != null) androidx.compose.runtime.LaunchedEffect(Unit) { Smoke.run(vm, window) }
             CompositionLocalProvider(LocalIsTv provides false, LocalFullscreen provides fullscreen) {
                 MultikiTheme { AppRoot(vm) }
             }

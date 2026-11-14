@@ -22,6 +22,43 @@ jobs:
       - name: Compile
         run: gradle --no-daemon compileKotlin
 
+  smoke:
+    needs: compile
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: windows } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "8.10.2" }
+      - name: Tools (virtual display, VLC, ffmpeg)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb libvlc-dev vlc-plugin-base vlc-plugin-video-output ffmpeg fonts-dejavu > /dev/null
+      - name: Test media (generated locally, no archive)
+        run: |
+          ffmpeg -loglevel error -f lavfi -i testsrc=size=640x480:rate=25 -f lavfi -i sine=frequency=440 -t 20 -c:v mpeg4 -vtag XVID -c:a libmp3lame $RUNNER_TEMP/test.avi
+          ffmpeg -loglevel error -f lavfi -i sine=frequency=330 -t 30 -c:a libmp3lame $RUNNER_TEMP/test.mp3
+      - name: Run the program through its screens
+        env:
+          ARHIV_SMOKE: ${{ runner.temp }}/smoke
+          ARHIV_SMOKE_VIDEO: ${{ runner.temp }}/test.avi
+          ARHIV_SMOKE_AUDIO: ${{ runner.temp }}/test.mp3
+          APPDATA: ${{ runner.temp }}/appdata
+          LOCALAPPDATA: ${{ runner.temp }}/localappdata
+        run: |
+          Xvfb :99 -screen 0 1600x1000x24 &
+          export DISPLAY=:99
+          sleep 2
+          timeout 240 gradle --no-daemon run || true
+          cat $ARHIV_SMOKE/smoke.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-screens
+          path: ${{ runner.temp }}/smoke
+
   package:
     needs: compile
     runs-on: windows-latest

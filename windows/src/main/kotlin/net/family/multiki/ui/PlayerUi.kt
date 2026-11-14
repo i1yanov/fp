@@ -238,7 +238,7 @@ fun StreamStatusLine(status: StreamStatus?, dark: Boolean = false, modifier: Mod
     val text = when {
         status.message != null -> status.message
         status.complete -> "Файл полностью загружен — перемотка без задержек"
-        status.total > 0 -> "Загружено в память устройства: ${status.percent}%"
+        status.total > 0 -> "Загружено в кэш: ${status.percent}%"
         else -> "Подключение к архиву…"
     }
     Text(

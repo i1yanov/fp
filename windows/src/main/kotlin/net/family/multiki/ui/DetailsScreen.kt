@@ -349,7 +349,7 @@ fun ProgressStrip(progress: Float, modifier: Modifier = Modifier) {
 
 /**
  * Where the title is saved and what can be done: «Скачать» (asks: this device or the home server),
- * «На сервер» / «На это устройство» to copy or move between them. Asks for notification permission once.
+ * «На сервер» / «На этот компьютер» to copy or move between them. Asks for notification permission once.
  */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
@@ -373,9 +373,9 @@ private fun DownloadButton(
     fun withPermission(action: () -> Unit) = action() // Windows: no permission needed
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        if (onDevice) SmallCaption("✓ На этом устройстве — смотрится без интернета")
+        if (onDevice) SmallCaption("✓ На этом компьютере — смотрится без интернета")
         if (onServer) SmallCaption("✓ На домашнем сервере — смотрится на всех устройствах")
-        if (local?.active == true) SmallCaption("Загружается на устройство: ${local.percent}%" + (local.current?.message?.let { " · $it" } ?: ""))
+        if (local?.active == true) SmallCaption("Загружается на компьютер: ${local.percent}%" + (local.current?.message?.let { " · $it" } ?: ""))
         if (serverTask?.active == true) SmallCaption("Загружается на сервер: ${serverTask.percent}%" + (serverTask.current?.message?.let { " · $it" } ?: ""))
         if (lib != null && !onServer && lib.busyElsewhere) SmallCaption("Загружается на сервер с устройства «${lib.busyDevice}»")
         val unfinished = listOfNotNull(local, serverTask).filter { !it.done }
@@ -404,7 +404,7 @@ private fun DownloadButton(
                     color = Palette.Teal,
                 )
                 else -> {
-                    if (onServer && !onDevice) PosterButton("На это устройство", onClick = { dialog = "toDevice" }, color = Palette.Teal)
+                    if (onServer && !onDevice) PosterButton("На этот компьютер", onClick = { dialog = "toDevice" }, color = Palette.Teal)
                     if (onDevice && !onServer && smb.configured) PosterButton("На сервер", onClick = { dialog = "toServer" }, color = Palette.Teal)
                     PosterButton("Загруженное", onClick = onOpenDownloads, color = Palette.InkSoft)
                 }
@@ -440,14 +440,14 @@ private fun DownloadButton(
             title = { Text("Куда сохранить?", style = MaterialTheme.typography.headlineSmall) },
             text = {
                 Text(
-                    "На это устройство — смотреть без интернета здесь.\nНа домашний сервер — смотреть на всех телевизорах и планшетах дома.",
+                    "На этот компьютер — смотреть без интернета здесь.\nНа домашний сервер — смотреть на всех телевизорах и планшетах дома.",
                     style = MaterialTheme.typography.bodyLarge,
                 )
             },
             confirmButton = {
                 DialogButtons(
                     listOf(
-                        DialogAction("На это устройство", Palette.Teal) { dialog = null; withPermission { onDownload(false) } },
+                        DialogAction("На этот компьютер", Palette.Teal) { dialog = null; withPermission { onDownload(false) } },
                         DialogAction("На сервер", Palette.Red) { dialog = null; withPermission { onDownload(true) } },
                         DialogAction("Отмена", Palette.InkSoft) { dialog = null },
                     )
@@ -459,7 +459,7 @@ private fun DownloadButton(
             val toServer = dialog == "toServer"
             AlertDialog(
                 onDismissRequest = { dialog = null },
-                title = { Text(if (toServer) "Перенести на сервер?" else "Перенести на это устройство?", style = MaterialTheme.typography.headlineSmall) },
+                title = { Text(if (toServer) "Перенести на сервер?" else "Перенести на этот компьютер?", style = MaterialTheme.typography.headlineSmall) },
                 text = {
                     Text(
                         "Копирование идёт по домашней сети, без интернета. «Копировать» оставит файл в обоих местах, " +

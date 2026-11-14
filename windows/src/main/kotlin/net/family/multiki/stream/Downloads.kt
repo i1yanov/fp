@@ -148,6 +148,17 @@ object Downloads {
         return t?.takeIf { it.state == DState.DONE }?.let { File(it.path) }?.takeIf { it.exists() }
     }
 
+    /** Self-test only (ARHIV_SMOKE): pretend a part is already saved on this computer. */
+    fun addDoneForTest(section: Section, item: Item, part: Int, file: File) {
+        val t = DTask(
+            id = java.util.UUID.randomUUID().toString(), sectionId = section.id, itemId = item.id, itemTitle = item.title,
+            sectionTitle = section.title, isVideo = section.kind == Kind.VIDEO, part = part, partsCount = item.parts.size,
+            url = "", path = file.absolutePath, total = file.length(), downloaded = file.length(), state = DState.DONE,
+            message = null, added = System.currentTimeMillis(),
+        )
+        synchronized(lock) { _tasks.value = _tasks.value + t }
+    }
+
     fun runningIn(lane: String): DTask? =
         _tasks.value.firstOrNull { it.sectionId == lane && it.state == DState.RUNNING }
 
@@ -434,7 +445,7 @@ object Downloads {
                 }
                 currentId = task.id
                 try {
-                    if (!copyFromFile(task, local, "Переносится с устройства на сервер")) {
+                    if (!copyFromFile(task, local, "Переносится с компьютера на сервер")) {
                         if (current(task.id)?.state != DState.PAUSED) sleep(failed(task, "Не удалось записать на сервер"))
                         return true
                     }
@@ -470,7 +481,7 @@ object Downloads {
             val part = File(task.path + ".part")
             SmbStore.openReader(smbPath).use { r ->
                 var done = if (part.exists()) part.length().coerceAtMost(r.size) else 0L
-                updateTask(task.id) { it.copy(state = DState.RUNNING, total = r.size, downloaded = done, message = "Переносится с сервера на устройство") }
+                updateTask(task.id) { it.copy(state = DState.RUNNING, total = r.size, downloaded = done, message = "Переносится с сервера на компьютер") }
                 FileOutputStream(part, done > 0).use { out ->
                     val buf = ByteArray(256 * 1024)
                     var lastUi = 0L

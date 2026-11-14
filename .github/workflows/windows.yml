@@ -1,0 +1,70 @@
+name: Windows build
+
+on:
+  push:
+    branches: [main]
+    paths: ["windows/**", ".github/workflows/windows.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: windows } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "8.10.2" }
+      - name: Compile
+        run: gradle --no-daemon compileKotlin
+
+  package:
+    needs: compile
+    runs-on: windows-latest
+    defaults: { run: { working-directory: windows, shell: bash } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "8.10.2" }
+      - name: Bundle VLC 3.0.21 (64-bit)
+        run: |
+          curl -fsSL -o vlc.zip https://get.videolan.org/vlc/3.0.21/win64/vlc-3.0.21-win64.zip
+          unzip -q vlc.zip -d vlc-unpacked
+          src=vlc-unpacked/vlc-3.0.21
+          dst=resources/windows/vlc
+          mkdir -p $dst
+          cp $src/libvlc.dll $src/libvlccore.dll $dst/
+          cp -r $src/plugins $dst/
+          # not needed inside the app: VLC's own window, skins, visualizations, lua scripts
+          rm -rf $dst/plugins/gui $dst/plugins/visualization $dst/plugins/lua $dst/plugins/video_splitter
+          du -sh $dst
+      - name: Build MSI
+        run: gradle --no-daemon packageMsi
+      - name: Collect
+        id: out
+        run: |
+          f=$(ls build/compose/binaries/main/msi/*.msi | head -1)
+          ver=$(grep -oP 'val appVersion = "\K[^"]+' build.gradle.kts)
+          cp "$f" "ArhivVeshchaniya-$ver.msi"
+          echo "file=windows/ArhivVeshchaniya-$ver.msi" >> $GITHUB_OUTPUT
+          echo "ver=$ver" >> $GITHUB_OUTPUT
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ArhivVeshchaniya-msi
+          path: ${{ steps.out.outputs.file }}
+      - name: Publish release
+        working-directory: .
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          tag="windows-v${{ steps.out.outputs.ver }}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "${{ steps.out.outputs.file }}" --clobber
+          else
+            gh release create "$tag" "${{ steps.out.outputs.file }}" --title "Архив Вещания для Windows ${{ steps.out.outputs.ver }}" --notes "Установщик для Windows 10/11 (64-бит). VLC уже внутри."
+          fi

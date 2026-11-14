@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
-import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import net.family.multiki.platform.AppContext
@@ -40,23 +39,35 @@ import net.family.multiki.ui.Palette
 import net.family.multiki.ui.SectionScreen
 import net.family.multiki.ui.SettingsScreen
 import net.family.multiki.ui.VideoPlayerScreen
+import net.family.multiki.ui.VideoPlayerView
+import net.family.multiki.ui.VideoSession
+import net.family.multiki.ui.rememberVideoSession
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.window.WindowPosition
 import java.io.File
 
 /** Shared screens look at this to switch on things meant for a TV remote; a computer is not a TV. */
 val LocalIsTv = staticCompositionLocalOf { false }
 
-/** Full screen for the video player (F / F11 / double click, Esc to leave). */
-class Fullscreen(private val window: WindowState) {
-    val isOn: Boolean get() = window.placement == WindowPlacement.Fullscreen
-    private var before = WindowPlacement.Floating
+/**
+ * Full screen for the video player (F / F11 / double click, Esc to leave). A borderless window over the whole
+ * monitor shows the same playback — an ordinary window would keep the Windows title bar.
+ */
+class Fullscreen {
+    var isOn by mutableStateOf(false)
+        private set
+    /** Monitor the program window is on (taken when switching on). */
+    var bounds: java.awt.Rectangle = java.awt.Rectangle(0, 0, 1280, 720)
+        private set
+    var owner: java.awt.Window? = null
+
     fun set(on: Boolean) {
         if (on == isOn) return
-        if (on) {
-            before = window.placement
-            window.placement = WindowPlacement.Fullscreen
-        } else {
-            window.placement = before
-        }
+        if (on) owner?.graphicsConfiguration?.bounds?.let { bounds = it }
+        isOn = on
+        if (!on) owner?.let { w -> javax.swing.SwingUtilities.invokeLater { w.toFront(); w.requestFocus() } }
     }
     fun toggle() = set(!isOn)
 }
@@ -95,7 +106,11 @@ fun main() {
     application {
         val vm = remember { MainViewModel() }
         val state = rememberWindowState(size = DpSize(1280.dp, 820.dp))
-        val fullscreen = remember { Fullscreen(state) }
+        val fullscreen = remember { Fullscreen() }
+        val screen = vm.current
+        val session = if (screen is Screen.VideoPlayer) key(screen) { rememberVideoSession(vm, screen) } else null
+        // leaving the video (not just switching to the next title) ends full screen
+        androidx.compose.runtime.LaunchedEffect(screen is Screen.VideoPlayer) { if (screen !is Screen.VideoPlayer) fullscreen.set(false) }
         Window(
             onCloseRequest = {
                 vm.close()
@@ -109,26 +124,58 @@ fun main() {
                 // Alt+← or Backspace outside text fields = «Назад»; F11 anywhere = full screen
                 when {
                     e.type == KeyEventType.KeyDown && e.key == Key.DirectionLeft && e.isAltPressed -> vm.back()
-                    e.type == KeyEventType.KeyDown && e.key == Key.F11 -> { fullscreen.toggle(); true }
+                    e.type == KeyEventType.KeyDown && e.key == Key.F11 && session != null -> { fullscreen.toggle(); true }
                     else -> false
                 }
             },
         ) {
             window.minimumSize = java.awt.Dimension(900, 600)
-            if (Smoke.dir != null) androidx.compose.runtime.LaunchedEffect(Unit) { Smoke.run(vm, window) }
+            fullscreen.owner = window
+            if (Smoke.dir != null) androidx.compose.runtime.LaunchedEffect(Unit) { Smoke.run(vm, window, fullscreen) }
             CompositionLocalProvider(LocalIsTv provides false, LocalFullscreen provides fullscreen) {
-                MultikiTheme { AppRoot(vm) }
+                MultikiTheme { AppRoot(vm, session) }
+            }
+        }
+
+        // borderless full-screen window with the same playback
+        if (screen is Screen.VideoPlayer && fullscreen.isOn) {
+            val b = fullscreen.bounds
+            val fsState = rememberWindowState(
+                placement = WindowPlacement.Floating,
+                position = WindowPosition(b.x.dp, b.y.dp),
+                size = DpSize(b.width.dp, b.height.dp),
+            )
+            Window(
+                onCloseRequest = { fullscreen.set(false) },
+                state = fsState,
+                title = "Архив Вещания",
+                icon = painterResource("icon.png"),
+                undecorated = true,
+                resizable = false,
+                alwaysOnTop = true,
+            ) {
+                androidx.compose.runtime.LaunchedEffect(Unit) {
+                    window.bounds = b // exactly the monitor, over the taskbar
+                    window.toFront()
+                    window.requestFocus()
+                }
+                CompositionLocalProvider(LocalIsTv provides false, LocalFullscreen provides fullscreen) {
+                    MultikiTheme {
+                        if (session != null) key(session) { VideoPlayerView(vm, session) }
+                        else Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black))
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun AppRoot(vm: MainViewModel) {
+fun AppRoot(vm: MainViewModel, session: VideoSession?) {
     val screen = vm.current
     if (screen is Screen.VideoPlayer) {
-        // key: a new title ("Что дальше?") gets a fresh player
-        key(screen) { VideoPlayerScreen(vm, screen.sectionId, screen.itemId, screen.part, screen.startMs) }
+        // key: a new title ("Что дальше?") gets a fresh view
+        key(screen) { VideoPlayerScreen(vm, session) }
     } else {
         Box(Modifier.fillMaxSize().background(Palette.Red)) {
             Column(Modifier.fillMaxSize().background(Palette.Paper)) {

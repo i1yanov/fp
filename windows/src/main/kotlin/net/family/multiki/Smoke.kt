@@ -21,7 +21,7 @@ object Smoke {
         dir?.let { File(it, "smoke.log").appendText("${System.currentTimeMillis()} $text\n") }
     }
 
-    suspend fun run(vm: MainViewModel, window: ComposeWindow) {
+    suspend fun run(vm: MainViewModel, window: ComposeWindow, fullscreen: Fullscreen) {
         val out = dir ?: return
         try {
             delay(4000)
@@ -35,6 +35,8 @@ object Smoke {
             vm.open(Screen.Details("multiki", film.id)); delay(2500); shot(window, out, "03-details")
             log("vlc: ${Vlc.factory != null} ${Vlc.error ?: ""}")
             vm.play(mult, film); delay(6000); shot(window, out, "04-video")
+            fullscreen.set(true); delay(2500); shotScreen(out, "04b-fullscreen")
+            fullscreen.set(false); delay(1500); shot(window, out, "04c-back-in-window")
             vm.back(); delay(1500)
             val tales = vm.section("audio")
             val tale = tales.items.first { it.parts.size >= 2 }
@@ -53,6 +55,14 @@ object Smoke {
             vm.close()
             Runtime.getRuntime().halt(0)
         }
+    }
+
+    private fun shotScreen(out: File, name: String) {
+        runCatching {
+            val size = java.awt.Toolkit.getDefaultToolkit().screenSize
+            ImageIO.write(Robot().createScreenCapture(Rectangle(size)), "png", File(out, "$name.png"))
+            log("shot $name")
+        }.onFailure { log("shot $name failed: $it") }
     }
 
     private fun shot(window: ComposeWindow, out: File, name: String) {

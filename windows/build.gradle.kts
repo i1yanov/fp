@@ -40,13 +40,14 @@ compose.desktop {
             targetFormats(TargetFormat.Msi)
             packageName = "ArhivVeshchaniya"
             packageVersion = appVersion
-            description = "Архив Вещания"
-            vendor = "Архив Вещания"
+            // jpackage reads these in the system code page: Latin only
+            description = "Arhiv Veshchaniya"
+            vendor = "Arhiv Veshchaniya"
             includeAllModules = true
             // bundled VLC (libvlc.dll, libvlccore.dll, plugins) is put here by the build workflow
             appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
             windows {
-                menuGroup = "Архив Вещания"
+                menuGroup = "Arhiv Veshchaniya"
                 shortcut = true
                 menu = true
                 dirChooser = true

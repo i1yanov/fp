@@ -62,6 +62,7 @@ class SmbFile internal constructor(private val raf: RandomAccessFile) : Closeabl
         raf.seek(fileOffset)
         raf.write(buf, off, len)
     }
+    fun flush() = Unit // RandomAccessFile writes straight through
     override fun close() { runCatching { raf.close() } }
 }
 

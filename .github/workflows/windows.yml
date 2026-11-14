@@ -53,11 +53,14 @@ jobs:
           sleep 2
           timeout 240 gradle --no-daemon run || true
           cat $ARHIV_SMOKE/smoke.log || true
-      - uses: actions/upload-artifact@v4
+      - name: Publish screenshots to the smoke-shots branch
         if: always()
-        with:
-          name: smoke-screens
-          path: ${{ runner.temp }}/smoke
+        working-directory: ${{ runner.temp }}/smoke
+        run: |
+          git init -q -b smoke-shots
+          git config user.name "build" && git config user.email "build@users.noreply.github.com"
+          git add -A && git commit -q -m "screens ${{ github.sha }}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" smoke-shots
 
   package:
     needs: compile

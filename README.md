@@ -11,7 +11,7 @@ install through Homebrew.
 
 # Архив Вещания (app.arhivveshchaniya)
 
-Клиент multiki.arjlover.net для LG webOS 4+ (мультфильмы, фильмы, аудиосказки, радиоспектакли). Работает в паре с домашним помощником на Linux-сервере с Samba. Подробная инструкция: https://i1yanov.github.io/fp/av/
+Просмотр на LG webOS 4+ того, что Android-приложение «Архив Вещания» скачало на домашний сервер. Разделы: «Скачанное» и «История». С сайтом архива не соединяется ни приложение, ни помощник (у помощника связь с архивом выключена; включается только флагом `--allow-archive`). Работает в паре с домашним помощником на Linux-сервере с Samba. Подробная инструкция: https://i1yanov.github.io/fp/av/
 
 ## Порядок установки
 
@@ -27,7 +27,8 @@ install through Homebrew.
 ## Обслуживание помощника
 
 - статус: `systemctl status arhiv-veshchaniya`, журнал: `journalctl -u arhiv-veshchaniya -f`
-- обновить или сменить папку/пользователя/порт: повторить команду из п. 1
+- обновить: `sudo curl -fsSL https://i1yanov.github.io/fp/av/arhiv-server.py -o /opt/arhiv-veshchaniya/arhiv-server.py && sudo systemctl restart arhiv-veshchaniya`
+- сменить папку/пользователя/порт: повторить команду из п. 1
 - удалить: `sudo systemctl disable --now arhiv-veshchaniya; sudo rm /etc/systemd/system/arhiv-veshchaniya.service; sudo rm -r /opt/arhiv-veshchaniya`
 
 ## Файлы

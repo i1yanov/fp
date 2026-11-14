@@ -34,7 +34,10 @@ import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-VERSION = "1.2"
+VERSION = "1.3"
+# По умолчанию помощник НИКОГДА не обращается к сайту архива: только отдаёт файлы папки и хранит историю.
+# Онлайн-просмотр и загрузка на сервер включаются лишь флагом --allow-archive.
+ARCHIVE_ALLOWED = False
 # Наборы заголовков. Первый — как у Android-приложения (с ним архив точно работает),
 # второй — как у обычного браузера, на случай если Cloudflare перед архивом отвергнет первый (403).
 HEADER_SETS = [
@@ -272,7 +275,7 @@ def _request(url, start, timeout, idx):
 
 
 def open_remote(url, start=0, timeout=25):
-    if denied_left():
+    if not ARCHIVE_ALLOWED or denied_left():
         raise Denied(401)
     idx = HEADER_IDX[0]
     try:
@@ -889,13 +892,15 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if u.path == "/api/status":
                 return self._json({"ok": True, "app": "Архив Вещания", "version": VERSION, "root": ROOT,
-                                   "rootExists": os.path.isdir(ROOT)})
+                                   "rootExists": os.path.isdir(ROOT), "archive": ARCHIVE_ALLOWED})
             if u.path == "/api/library":
                 return self._json({"items": scan_library()})
             if u.path == "/api/history":
                 return self._json({"records": history_records()})
             if u.path == "/api/downloads":
                 return self._json({"tasks": DOWNLOADS.snapshot()})
+            if u.path in ("/api/stream-status", "/stream") and not ARCHIVE_ALLOWED:
+                return self._json({"error": "archive access disabled"}, 403)
             if u.path == "/api/stream-status":
                 return self._json({"status": STREAMS.status(q.get("lane", ""))})
             if u.path.startswith("/files/"):
@@ -922,6 +927,8 @@ class Handler(BaseHTTPRequestHandler):
         u = urllib.parse.urlsplit(self.path)
         try:
             b = self._body()
+            if u.path.startswith("/api/download") and not ARCHIVE_ALLOWED:
+                return self._json({"error": "archive access disabled"}, 403)
             if u.path == "/api/history":
                 history_put(b.get("deviceId"), b.get("deviceName"), b["record"])
                 return self._json({"ok": True})
@@ -1023,23 +1030,29 @@ def self_test(urls):
 
 
 def main():
-    global ROOT, CACHE_LIMIT
+    global ROOT, CACHE_LIMIT, ARCHIVE_ALLOWED
     if "--test" in sys.argv:
+        if "--allow-archive" not in sys.argv:
+            print("Связь с архивом отключена. Проверка соединяется с сайтом архива — запускайте её только намеренно: --test --allow-archive")
+            sys.exit(1)
         extra = [a for a in sys.argv[1:] if a.startswith("http")]
         sys.exit(self_test(extra or TEST_URLS))
     ap = argparse.ArgumentParser(description="Архив Вещания — домашний помощник для телевизоров LG")
     ap.add_argument("--root", required=True, help="папка «Архив Вещания» на диске сервера (та же, что в Samba)")
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--cache-gb", type=float, default=5, help="размер кэша онлайн-просмотра, ГБ")
+    ap.add_argument("--allow-archive", action="store_true", help="разрешить обращения к сайту архива (онлайн и загрузка); по умолчанию выключено")
     a = ap.parse_args()
+    ARCHIVE_ALLOWED = a.allow_archive
     ROOT = os.path.abspath(a.root)
     CACHE_LIMIT = int(a.cache_gb * 1024 ** 3)
     os.makedirs(ROOT, exist_ok=True)
     os.umask(0o002)
-    DOWNLOADS.init()
+    if ARCHIVE_ALLOWED:
+        DOWNLOADS.init()   # без разрешения очередь даже не читается и не возобновляется
     srv = ThreadingHTTPServer(("0.0.0.0", a.port), Handler)
     srv.daemon_threads = True
-    log("Архив Вещания — помощник %s. Папка: %s. Порт: %d" % (VERSION, ROOT, a.port))
+    log("Архив Вещания — помощник %s. Папка: %s. Порт: %d. Связь с архивом: %s" % (VERSION, ROOT, a.port, "разрешена" if ARCHIVE_ALLOWED else "отключена"))
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

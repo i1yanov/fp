@@ -1,8 +1,8 @@
 /*
  * Плеер на встроенном <video> webOS (аппаратное декодирование: AVI/XviD, MPEG-2, MP3).
- * Источник: файл на домашнем сервере → архив через помощника (одно соединение, кэш) → архив напрямую.
+ * Источник — только файл на домашнем сервере. С сайтом архива плеер не соединяется.
  * Место остановки уходит на сервер каждые 10 с, при паузе и выходе — общее со всеми устройствами.
- * После последней серии — «Что дальше?»: отсчёт 10 с, «Сейчас», «Стоп», «По порядку», «Случайно».
+ * После последней серии — «Что дальше?» среди скачанного в том же разделе: отсчёт 10 с, «Сейчас», «Стоп», «По порядку», «Случайно».
  */
 Screens.player = function (params) {
     'use strict';
@@ -19,18 +19,18 @@ Screens.player = function (params) {
     var curEl = osd.querySelector('.cur'), durEl = osd.querySelector('.dur'), seekEl = osd.querySelector('.seek'), msgEl = osd.querySelector('.msg');
     var stateEl = el.querySelector('.pstate'), errEl = el.querySelector('.perr'), nextEl = el.querySelector('.next'), audEl = el.querySelector('.aud');
 
-    var sec = null, it = null, part = 0, resumeMs = 0, alive = true, started = false, finished = false;
-    var osdTimer = null, saveTimer = null, statTimer = null, cdTimer = null;
+    var it = null, part = 0, resumeMs = 0, alive = true, started = false, finished = false;
+    var osdTimer = null, saveTimer = null, cdTimer = null;
     var seekTarget = null, seekTimer = null, lastSeekKey = 0, seekStreak = 0;
     var next = null, nextRandom = false, secondsLeft = 10;
 
-    Catalog.load(params.sec).then(function (s) {
-        sec = s;
-        it = s.byId[params.id];
-        if (!it) return fail('Не найдено в каталоге');
-        if (s.kind === 'audio') { audEl.innerHTML = U.art(Catalog.thumbArt(s)); audEl.classList.remove('hidden'); }
+    function init() {
+        it = Lib.get(params.sec, params.id);
+        if (!it || !it.complete) return fail('Этого нет на домашнем сервере');
+        if (!it.video) { audEl.innerHTML = U.art(Lib.art(it.sec)); audEl.classList.remove('hidden'); }
         start(params.part || 0, params.start || 0);
-    });
+    }
+    setTimeout(init, 0);
 
     function start(p, fromMs) {
         part = Math.max(0, Math.min(p, it.parts.length - 1));
@@ -40,14 +40,15 @@ Screens.player = function (params) {
         load.classList.remove('hidden');
         osd.querySelector('.ttl').textContent = it.title;
         osd.querySelector('.sub').textContent = it.parts.length > 1
-            ? (sec.kind === 'audio' ? 'Запись ' : 'Серия ') + (part + 1) + ' из ' + it.parts.length + (sec.kind === 'audio' ? ': ' + Catalog.trackTitle(it, it.parts[part]) : '')
-            : sec.title;
-        video.src = Server.playUrl(sec, it, part);
+            ? (it.video ? 'Серия ' : 'Запись ') + (part + 1) + ' из ' + it.parts.length + (it.video ? '' : ': ' + Lib.trackTitle(it, it.parts[part]))
+            : it.secTitle;
+        var src = Server.partUrl(it.sec, it.id, it.parts[part].n);
+        if (!src) return fail('Этой части нет на домашнем сервере');
+        video.src = src;
         video.load();
         var pr = video.play();
         if (pr && pr.catch) pr.catch(function () { /* autoplay handled by events */ });
         showOsd();
-        pollStatus();
     }
 
     // ---------------------------------------------------------- события видео
@@ -63,7 +64,7 @@ Screens.player = function (params) {
         if (!started) { started = true; save(false); }
         showOsd();
     });
-    video.addEventListener('waiting', function () { load.classList.remove('hidden'); pollStatus(); });
+    video.addEventListener('waiting', function () { load.classList.remove('hidden'); });
     video.addEventListener('pause', function () { if (started && !video.ended) { stateEl.classList.remove('hidden'); save(false); showOsd(true); } });
     video.addEventListener('timeupdate', updateBar);
     video.addEventListener('ended', function () {
@@ -75,19 +76,23 @@ Screens.player = function (params) {
     video.addEventListener('error', function () {
         if (!alive || !it) return;
         load.classList.add('hidden');
-        fail('Не удалось воспроизвести файл' + (Server.configured() ? '' : '. Без домашнего сервера архив может отказать в соединении — подключите сервер в «Настройках».'));
+        fail('Не удалось воспроизвести файл с домашнего сервера. Проверьте, что сервер включён.');
     });
 
     function fail(text) {
+        load.classList.add('hidden');
         errEl.innerHTML = '<h2>' + esc(text) + '</h2><div class="btn red f autofocus" data-a="retry">Попробовать снова</div><div class="btn soft f" data-a="exit">Выйти</div>';
         errEl.classList.remove('hidden');
-        errEl.querySelector('[data-a="retry"]').addEventListener('click', function () { start(part, Math.floor((video.currentTime || 0) * 1000)); });
+        errEl.querySelector('[data-a="retry"]').addEventListener('click', function () {
+            if (!it || !it.complete) { errEl.classList.add('hidden'); load.classList.remove('hidden'); Server.refresh().then(init); }
+            else start(part, Math.floor((video.currentTime || 0) * 1000));
+        });
         errEl.querySelector('[data-a="exit"]').addEventListener('click', function () { Router.back(); });
         Nav.focusFirst(errEl);
     }
 
     function updateBar() {
-        var d = video.duration || (it && it.parts[part].dur) || 0, t = seekTarget != null ? seekTarget : video.currentTime || 0;
+        var d = video.duration || 0, t = seekTarget != null ? seekTarget : video.currentTime || 0;
         barI.style.width = d ? Math.min(100, t / d * 100) + '%' : '0';
         barB.style.left = d ? Math.min(100, t / d * 100) + '%' : '0';
         curEl.textContent = U.dur(t);
@@ -100,25 +105,12 @@ Screens.player = function (params) {
         if (!stay) osdTimer = setTimeout(function () { if (!video.paused) osd.classList.add('off'); }, 4000);
     }
 
-    function pollStatus() {
-        clearTimeout(statTimer);
-        if (!Server.configured() || !sec) return;
-        Server.streamStatus(sec.id).then(function (st) {
-            var t = '';
-            if (st && st.message) t = st.message;
-            else if (st && st.total > 0) t = 'Загружено в кэш сервера: ' + Math.floor(st.downloaded * 100 / st.total) + '%';
-            pstat.textContent = t;
-            msgEl.textContent = t;
-        }, function () { /* ignore */ });
-        if (alive && (!started || !load.classList.contains('hidden'))) statTimer = setTimeout(pollStatus, 2000);
-    }
-
     // ---------------------------------------------------------- история
     function save(done) {
         if (!it) return;
-        var d = video.duration && isFinite(video.duration) ? video.duration * 1000 : (it.parts[part].dur || 0) * 1000;
+        var d = video.duration && isFinite(video.duration) ? video.duration * 1000 : 0;
         Server.saveHistory({
-            s: sec.id, i: it.id, t: it.title, st: sec.title, v: sec.kind !== 'audio',
+            s: it.sec, i: it.id, t: it.title, st: it.secTitle, v: it.video,
             p: done ? 0 : part, pc: it.parts.length, pos: done ? 0 : Math.floor((video.currentTime || 0) * 1000), dur: Math.floor(d), f: !!done
         });
     }
@@ -153,7 +145,7 @@ Screens.player = function (params) {
     function showNext() {
         clearInterval(cdTimer);
         osd.classList.add('off'); errEl.classList.add('hidden');
-        next = Catalog.nextAfter(sec, it.id, nextRandom);
+        next = Lib.nextAfter(it, nextRandom);
         if (!next) { Router.back(); return; }
         secondsLeft = 10;
         renderNext();
@@ -184,9 +176,9 @@ Screens.player = function (params) {
     }
 
     function goNext() {
-        var r = Server.hist(sec.id, next.id);
+        var r = Server.hist(next.sec, next.id);
         var resume = Hist.canResume(r);
-        Router.replace('player', { sec: sec.id, id: next.id, part: resume ? r.p : 0, start: resume ? r.pos : 0 });
+        Router.replace('player', { sec: next.sec, id: next.id, part: resume ? r.p : 0, start: resume ? r.pos : 0 });
     }
 
     // ---------------------------------------------------------- пульт
@@ -220,7 +212,7 @@ Screens.player = function (params) {
         destroy: function () {
             alive = false;
             if (started && !finished) save(false);
-            clearInterval(saveTimer); clearInterval(cdTimer); clearTimeout(osdTimer); clearTimeout(statTimer); clearTimeout(seekTimer);
+            clearInterval(saveTimer); clearInterval(cdTimer); clearTimeout(osdTimer); clearTimeout(seekTimer);
             try { video.pause(); video.removeAttribute('src'); video.load(); } catch (e) { /* ignore */ }
         }
     };

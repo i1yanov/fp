@@ -1,15 +1,15 @@
 {
   "id": "app.arhivveshchaniya",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "web",
   "title": "Архив Вещания",
-  "appDescription": "Мультфильмы, фильмы, аудиосказки и радиоспектакли с multiki.arjlover.net. Работает с домашним сервером: общее «Загруженное», история и места остановки вместе с Android.",
+  "appDescription": "Смотрит на телевизоре мультфильмы, фильмы, сказки и радиоспектакли, уже скачанные на домашний сервер с Android-устройств. С сайтом архива не соединяется.",
   "iconUri": "https://i1yanov.github.io/fp/av160.png",
   "sourceUrl": "https://i1yanov.github.io/fp/av/",
   "rootRequired": false,
-  "ipkUrl": "https://i1yanov.github.io/fp/app.arhivveshchaniya_1.0.0_all.ipk",
-  "ipkSize": 1529384,
+  "ipkUrl": "https://i1yanov.github.io/fp/app.arhivveshchaniya_1.1.0_all.ipk",
+  "ipkSize": 650904,
   "ipkHash": {
-    "sha256": "0417bea5c119dae6a7fd597ae4cf601cc1e18e2a3e3a827f60832d0f85763b5c"
+    "sha256": "7f1b94424813a28d9f364a5dfc47c9b533de449d7b195f63936a2ee329690d7a"
   }
 }

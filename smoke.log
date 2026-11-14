@@ -1,0 +1,14 @@
+1794646753832 shot 01-home
+1794646757531 shot 02-section
+1794646760073 shot 03-details
+1794646760075 vlc: true 
+1794646766123 shot 04-video
+1794646768693 shot 04b-fullscreen
+1794646770241 shot 04c-back-in-window
+1794646776840 shot 05-audio
+1794646776849 audio state: AudioState(sectionId=audio, itemId=Baba_yaga, itemTitle=1. Баба-Яга, trackTitle=chitaet Larisa Luzhina - Baba Yaga, index=0, count=5, isPlaying=true, isBuffering=false, positionMs=4252, durationMs=30081, error=null)
+1794646778389 shot 06-home-miniplayer
+1794646780427 shot 07-downloads
+1794646782464 shot 08-history
+1794646784503 shot 09-settings
+1794646784503 done

@@ -1,15 +1,15 @@
 {
   "id": "app.arhivveshchaniya",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "web",
   "title": "Архив Вещания",
   "appDescription": "Смотрит на телевизоре мультфильмы, фильмы, сказки и радиоспектакли, уже скачанные на домашний сервер с Android-устройств. С сайтом архива не соединяется.",
   "iconUri": "https://i1yanov.github.io/fp/av160.png",
   "sourceUrl": "https://i1yanov.github.io/fp/av/",
   "rootRequired": false,
-  "ipkUrl": "https://i1yanov.github.io/fp/app.arhivveshchaniya_1.1.0_all.ipk",
-  "ipkSize": 650904,
+  "ipkUrl": "https://i1yanov.github.io/fp/app.arhivveshchaniya_1.2.0_all.ipk",
+  "ipkSize": 652394,
   "ipkHash": {
-    "sha256": "7f1b94424813a28d9f364a5dfc47c9b533de449d7b195f63936a2ee329690d7a"
+    "sha256": "5a17b440e91b91c84fd2fcfe4bd1b62db5ae93b6543267e2d3c9be50c18f9d44"
   }
 }

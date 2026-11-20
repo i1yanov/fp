@@ -12,11 +12,13 @@ Screens.player = function (params) {
         '<div class="pstate hidden">❚❚</div>' +
         '<div class="osd"><div class="top"><div class="ttl"></div><div class="sub"></div></div>' +
         '<div class="bottom"><div class="pbar"><i></i><b></b></div><div class="times"><span class="cur">0:00</span><span class="seek"></span><span class="dur">0:00</span></div>' +
-        '<div class="keys">OK — пауза · ◀ ▶ — перемотка 10 с (удерживайте — быстрее) · CH ▲▼ — серии · «Назад» — выход</div><div class="msg"></div></div></div>' +
+        '<div class="keys">OK — пауза · ◀ ▶ — перемотка 10 с (удерживайте — быстрее) · CH ▲▼ — серии · «Назад» — выход</div>' +
+        '<div class="scrrow hidden"><div class="scrbtn">⏻ Выключить экран</div></div><div class="msg"></div></div></div>' +
         '<div class="perr hidden"></div><div class="next hidden"></div></div>');
     var video = el.querySelector('video'), load = el.querySelector('.pload'), pstat = el.querySelector('.pstat');
     var osd = el.querySelector('.osd'), barI = osd.querySelector('.pbar i'), barB = osd.querySelector('.pbar b');
     var curEl = osd.querySelector('.cur'), durEl = osd.querySelector('.dur'), seekEl = osd.querySelector('.seek'), msgEl = osd.querySelector('.msg');
+    var scrRow = osd.querySelector('.scrrow'), scrBtn = osd.querySelector('.scrbtn'), scrSel = false;
     var stateEl = el.querySelector('.pstate'), errEl = el.querySelector('.perr'), nextEl = el.querySelector('.next'), audEl = el.querySelector('.aud');
 
     var it = null, part = 0, resumeMs = 0, alive = true, started = false, finished = false;
@@ -27,7 +29,12 @@ Screens.player = function (params) {
     function init() {
         it = Lib.get(params.sec, params.id);
         if (!it || !it.complete) return fail('Этого нет на домашнем сервере');
-        if (!it.video) { audEl.innerHTML = U.art(Lib.art(it.sec)); audEl.classList.remove('hidden'); }
+        if (!it.video) {
+            audEl.innerHTML = U.art(Lib.art(it.sec)); audEl.classList.remove('hidden');
+            // звук: можно погасить экран
+            scrRow.classList.remove('hidden');
+            osd.querySelector('.keys').textContent = 'OK — пауза · ◀ ▶ — перемотка 10 с · CH ▲▼ — записи · ▼ — «Выключить экран» · «Назад» — выход';
+        }
         start(params.part || 0, params.start || 0);
     }
     setTimeout(init, 0);
@@ -182,12 +189,31 @@ Screens.player = function (params) {
     }
 
     // ---------------------------------------------------------- пульт
+    function selectScr(on) {
+        scrSel = on;
+        scrBtn.classList.toggle('sel', on);
+        showOsd(on);
+    }
+
     function onKey(e) {
         var k = e.keyCode;
+        // экран выключен: любая кнопка пульта включает его и больше ничего не делает
+        if (ScreenOff.isActive()) { ScreenOff.wake(); showOsd(); return true; }
         var overlay = !nextEl.classList.contains('hidden') || !errEl.classList.contains('hidden');
         if (overlay) {
             if (k === KEY.BACK || k === KEY.ESC) { Router.back(); return true; }
             return false; // кнопки оверлея — обычная навигация
+        }
+        if (it && !it.video && scrRow && !scrRow.classList.contains('hidden')) {
+            if (scrSel) {
+                if (k === KEY.ENTER) { selectScr(false); ScreenOff.on(); return true; }
+                selectScr(false);
+                if (k === KEY.UP || k === KEY.DOWN || k === KEY.BACK || k === KEY.ESC) return true;
+            } else if (k === KEY.DOWN || k === KEY.RED) {
+                if (k === KEY.RED) { ScreenOff.on(); return true; }
+                selectScr(true);
+                return true;
+            }
         }
         switch (k) {
             case KEY.ENTER: case KEY.PLAYPAUSE: toggle(); return true;
@@ -211,6 +237,7 @@ Screens.player = function (params) {
         onBack: function () { return false; },
         destroy: function () {
             alive = false;
+            if (ScreenOff.isActive()) ScreenOff.wake();
             if (started && !finished) save(false);
             clearInterval(saveTimer); clearInterval(cdTimer); clearTimeout(osdTimer); clearTimeout(seekTimer);
             try { video.pause(); video.removeAttribute('src'); video.load(); } catch (e) { /* ignore */ }

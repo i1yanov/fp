@@ -45,3 +45,18 @@ install through Homebrew.
 - Установщик: https://github.com/i1yanov/fp/releases/latest/download/ArhivVeshchaniya.msi
 - Инструкция: https://i1yanov.github.io/fp/windows/
 - Исходники: `windows/` (Kotlin, Compose for Desktop, vlcj). Сборка — GitHub Actions (`.github/workflows/windows.yml`): проверка компиляции, самотест на виртуальном экране, сборка `.msi` с VLC 3.0.21 и публикация в Releases. Версия — `appVersion` в `windows/build.gradle.kts`.
+
+---
+
+# Диафильмы (app.diafilmy)
+
+Просмотр диафильмов с сайта diafilmy.su на LG webOS 4+ — перенос Android-приложения «Диафильмы». Инструкция: https://i1yanov.github.io/fp/dia/
+
+- Разделы сайта, сортировка по дате добавления и году выпуска, рубрикатор по страницам / буквам / годам, «Случайный», поиск.
+- Просмотр: кадры протягиваются кнопками ▲ ▼, по OK — круговое меню (о диафильме, сохранить/удалить, случайный, сначала, выход).
+- «Сохранённое» — кадры в IndexedDB телевизора для просмотра без интернета.
+- Сайт не отдаёт CORS-заголовков, поэтому страницы читает фоновая служба `app.diafilmy.service` (Node.js): один запрос за раз, пауза 1,5 с, при 403/429/503 — пауза на час (или по Retry-After).
+
+**Установка:** Homebrew Channel → репозиторий `https://i1yanov.github.io/fp/a.json` → «Диафильмы» → Install.
+
+**Файлы:** `dia/src/webos/` — приложение, `dia/src/service/` — служба, `dia/src/build_ipk.sh` — сборка (`bash dia/src/build_ipk.sh dia/src .`), `dia/index.html` и `dia/d.html` — страницы описания. Версия — `dia/src/webos/appinfo.json` (сквозная нумерация с Android-версией: 1.5 — Android, 1.6.0 — первая версия для webOS).

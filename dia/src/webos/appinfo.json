@@ -1,0 +1,14 @@
+{
+    "id": "app.diafilmy",
+    "version": "1.6.0",
+    "vendor": "Диафильмы",
+    "type": "web",
+    "main": "index.html",
+    "title": "Диафильмы",
+    "icon": "img/icon.png",
+    "largeIcon": "img/largeIcon.png",
+    "iconColor": "#8E1B16",
+    "resolution": "1920x1080",
+    "disableBackHistoryAPI": true,
+    "transparent": false
+}

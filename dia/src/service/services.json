@@ -1,0 +1,10 @@
+{
+  "id": "app.diafilmy.service",
+  "description": "Diafilmy fetcher",
+  "services": [
+    {
+      "name": "app.diafilmy.service",
+      "description": "Gentle HTTP fetcher for diafilmy.su"
+    }
+  ]
+}

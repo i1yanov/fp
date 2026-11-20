@@ -1,0 +1,6 @@
+{
+  "name": "app.diafilmy.service",
+  "version": "1.6.0",
+  "description": "Diafilmy background fetcher (gentle, one request at a time)",
+  "main": "service.js"
+}

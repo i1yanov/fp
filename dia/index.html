@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Диафильмы для LG webOS</title>
+<style>
+body{margin:0;background:#17110D;color:#F3E6C8;font:17px/1.55 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+main{max-width:760px;margin:0 auto;padding:32px 20px 60px}
+h1{font-family:Georgia,serif;font-size:34px;margin:0 0 4px}
+h2{color:#E8A33D;font-size:22px;margin:30px 0 8px}
+.sub{color:#D2C2A2;margin:0 0 20px}
+code{background:#33251C;padding:2px 7px;border-radius:5px;word-break:break-all}
+li{margin:4px 0} a{color:#E8A33D}
+.logo{width:72px;height:72px;border-radius:16px;float:left;margin:0 16px 8px 0}
+.key{display:inline-block;background:#33251C;border-radius:5px;padding:0 7px;font-weight:600}
+</style></head><body><main>
+<img class="logo" src="../dia160.png" alt="">
+<h1>Диафильмы</h1>
+<p class="sub">для телевизоров LG на webOS 4 и новее · версия 1.6.0</p>
+<h2>Установка</h2>
+<ol>
+<li>Откройте на телевизоре <b>Homebrew Channel</b>.</li>
+<li>Если репозиторий ещё не добавлен: «Настройки» → «Добавить репозиторий» → <code>https://i1yanov.github.io/fp/a.json</code>.</li>
+<li>Выберите <b>«Диафильмы»</b> → <b>Install</b>. Значок появится в списке приложений.</li>
+</ol>
+<h2>Управление пультом</h2>
+<ul>
+<li>В списках: стрелки — выбор, <span class="key">OK</span> — открыть, <span class="key">Назад</span> — назад.</li>
+<li>При просмотре: <span class="key">▼</span> следующий кадр, <span class="key">▲</span> предыдущий.</li>
+<li><span class="key">OK</span> при просмотре — круговое меню: «О диафильме», «Сохранить» / «Удалить», «Случайный диафильм», «Смотреть сначала», «Выйти к списку», в центре — «Закрыть». Стрелки выбирают пункт, <span class="key">OK</span> выполняет.</li>
+<li>В «Сохранённом» красная кнопка удаляет выбранный диафильм с телевизора.</li>
+<li>Указка Magic Remote тоже работает: колесо листает кадры, щелчок открывает меню.</li>
+</ul>
+<h2>Как приложение обращается к сайту</h2>
+<p>Телевизор не даёт веб-приложениям читать чужие сайты напрямую, поэтому вместе с приложением ставится маленькая фоновая служба. Она запрашивает страницы строго по одной, с паузой 1,5 секунды, и запоминает их на 15 минут. Годы выпуска берутся одним запросом из «Базы диафильмов». Если сайт ответит отказом (403/429/503), служба прекращает обращения на час и приложение показывает, до какого времени пауза. «Сохранённое» при этом работает без сети.</p>
+<h2>Исходники</h2>
+<p><code>dia/src/webos</code> — приложение, <code>dia/src/service</code> — служба, <code>dia/src/build_ipk.sh</code> — сборка пакета: <code>bash dia/src/build_ipk.sh dia/src .</code></p>
+<p class="sub">Неофициальное приложение для личного использования. Диафильмы принадлежат их правообладателям и сайту diafilmy.su.</p>
+</main></body></html>

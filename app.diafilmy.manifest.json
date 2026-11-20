@@ -1,0 +1,15 @@
+{
+  "id": "app.diafilmy",
+  "version": "1.6.0",
+  "type": "web",
+  "title": "Диафильмы",
+  "appDescription": "Диафильмы с сайта diafilmy.su на телевизоре: разделы, сортировка по дате и году, рубрикатор, случайный выбор, поиск, просмотр с плавной протяжкой кадров и сохранение для просмотра без интернета.",
+  "iconUri": "https://i1yanov.github.io/fp/dia160.png",
+  "sourceUrl": "https://i1yanov.github.io/fp/dia/",
+  "rootRequired": false,
+  "ipkUrl": "https://i1yanov.github.io/fp/app.diafilmy_1.6.0_all.ipk",
+  "ipkSize": 57458,
+  "ipkHash": {
+    "sha256": "e54926a448c3778815184297de54383fa9837fb074fafce544255601d5d114a1"
+  }
+}

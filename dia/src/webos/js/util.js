@@ -2,7 +2,7 @@
 (function () {
     'use strict';
     var App = window.App = window.App || {};
-    App.VERSION = '1.6.0';
+    App.VERSION = '1.7.0';
     App.BASE = 'https://diafilmy.su/';
     App.SERVICE = 'luna://app.diafilmy.service/';
 

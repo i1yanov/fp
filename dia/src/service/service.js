@@ -15,8 +15,22 @@ var Service = require('webos-service');
 var https = require('https');
 var http = require('http');
 var urlm = require('url');
+var fs = require('fs');
+var path = require('path');
 
-var VERSION = '1.6.0';
+// Свежий список корневых сертификатов (набор Mozilla). Встроенный в webOS Node.js
+// бывает слишком старым и не доверяет сертификату сайта ("unable to get local issuer certificate").
+var CA_LIST = (function () {
+    try {
+        var pem = fs.readFileSync(path.join(__dirname, 'cacert.pem'), 'utf8');
+        return pem.match(/-----BEGIN CERTIFICATE-----[\s\S]+?-----END CERTIFICATE-----/g) || undefined;
+    } catch (e) { return undefined; }
+})();
+var CERT_ERRORS = ['UNABLE_TO_GET_ISSUER_CERT_LOCALLY', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE', 'UNABLE_TO_GET_ISSUER_CERT',
+    'SELF_SIGNED_CERT_IN_CHAIN', 'CERT_UNTRUSTED', 'DEPTH_ZERO_SELF_SIGNED_CERT'];
+var httpFallback = false; // сайт открыт только по http: включается сам, если https не проходит проверку
+
+var VERSION = '1.7.0';
 var UA = 'DiafilmApp/' + VERSION + ' (webOS; viewer for diafilmy.su)';
 var HTML_GAP = 1500;
 var BINARY_GAP = 400;
@@ -119,7 +133,7 @@ function encodeForm(form) {
 
 function request(opts, cb, redirects) {
     redirects = redirects || 0;
-    var u = urlm.parse(opts.url);
+    var u = urlm.parse(httpFallback && !redirects ? opts.url.replace(/^https:/, 'http:') : opts.url);
     var lib = u.protocol === 'http:' ? http : https;
     var body = opts.method === 'POST' ? encodeForm(opts.form) : null;
     var headers = {
@@ -143,13 +157,14 @@ function request(opts, cb, redirects) {
         port: u.port,
         path: u.path,
         method: opts.method || 'GET',
-        headers: headers
+        headers: headers,
+        ca: lib === https ? CA_LIST : undefined
     }, function (res) {
         var status = res.statusCode;
         if (status >= 300 && status < 400 && res.headers.location && redirects < 5) {
             res.resume();
-            var next = urlm.resolve(opts.url, res.headers.location);
-            var nextOpts = { url: next, method: status === 303 ? 'GET' : opts.method, form: opts.form, binary: opts.binary };
+            var next = urlm.resolve(u.href, res.headers.location);
+            var nextOpts = { url: next, method: status === 303 ? 'GET' : opts.method, form: opts.form, binary: opts.binary, noFallback: opts.noFallback };
             if (status === 301 || status === 302) nextOpts.method = 'GET';
             return request(nextOpts, finish, redirects + 1);
         }
@@ -161,7 +176,17 @@ function request(opts, cb, redirects) {
         res.on('error', finish);
     });
     req.setTimeout(30000, function () { req.abort(); finish(new Error('Сайт не отвечает (таймаут)')); });
-    req.on('error', finish);
+    req.on('error', function (err) {
+        // Сертификат так и не прошёл проверку (например, сайт не отдаёт промежуточный сертификат):
+        // публичные страницы читаем по http, как разрешено и в Android-версии
+        if (err && CERT_ERRORS.indexOf(err.code) >= 0 && u.protocol === 'https:' && !opts.noFallback && redirects === 0) {
+            httpFallback = true;
+            return request({ url: opts.url.replace(/^https:/, 'http:'), method: opts.method, form: opts.form,
+                binary: opts.binary, noFallback: true }, finish, 0);
+        }
+        if (err && CERT_ERRORS.indexOf(err.code) >= 0) err = new Error('Телевизор не смог проверить сертификат сайта (' + err.code + ')');
+        finish(err);
+    });
     if (body !== null) req.write(body);
     req.end();
 }

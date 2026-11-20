@@ -59,4 +59,4 @@ install through Homebrew.
 
 **Установка:** Homebrew Channel → репозиторий `https://i1yanov.github.io/fp/a.json` → «Диафильмы» → Install.
 
-**Файлы:** `dia/src/webos/` — приложение, `dia/src/service/` — служба, `dia/src/build_ipk.sh` — сборка (`bash dia/src/build_ipk.sh dia/src .`), `dia/index.html` и `dia/d.html` — страницы описания. Версия — `dia/src/webos/appinfo.json` (сквозная нумерация с Android-версией: 1.5 — Android, 1.6.0 — первая версия для webOS).
+**Файлы:** `dia/src/webos/` — приложение, `dia/src/service/` — служба, `dia/src/build_ipk.sh` — сборка (`bash dia/src/build_ipk.sh dia/src .`), `dia/index.html` и `dia/d.html` — страницы описания. Версия — `dia/src/webos/appinfo.json` (сквозная нумерация с Android-версией: 1.5 — Android, 1.6.0 — первая версия для webOS, 1.7.0 — свежие корневые сертификаты в службе и выравнивание экрана).

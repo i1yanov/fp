@@ -57,8 +57,10 @@
                 App.router.push(new SavedScreen());
             }));
             grid.appendChild(h('div.section-title', { text: 'Диафильмы' }));
+            var cats = h('div.tiles3');
+            grid.appendChild(cats);
             App.CATEGORIES.forEach(function (c) {
-                grid.appendChild(tile(c.slug, c.title, c.count + ' шт.', 'film', false, function () {
+                cats.appendChild(tile(c.slug, c.title, c.count + ' шт.', 'film', false, function () {
                     App.router.push(new CategoryScreen(c));
                 }));
             });
